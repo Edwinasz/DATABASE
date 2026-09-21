@@ -30,6 +30,7 @@ penktadienį. Pateikite informaciją apie darbuotojus, jų priėmimo į darbą i
 užmokesčio gavimo datas. Surūšiuokite pagal priėmimo į darbą datą. */
 
 SELECT ENAME, NEXT_DAY(LAST_DAY(round(HIREDATE, 'Month')) - 7, 'Friday') as PAYDAY
+ORDER by HIREDATE
 from EMP;
 
 /* 6. Išveskite į ekraną informaciją žemiau parodytu būdu: */
