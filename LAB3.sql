@@ -15,12 +15,13 @@ priėmimo į darbą datos. Duomenis pateikite atlyginimo peržiūrėjimo datos d
 tvarka. */
 
 SELECT ENAME, HIREDATE, add_months(HIREDATE, 12) as Review
-from EMP;
+from EMP
+ORDER by Review;
 
 /* 4. Parašykite užklausą, pateikiančią, kiek laiko darbuotojas dirba įmonėje. Galite naudoti
 DEFINE komandą, kad nereikėtų pakartotinai suvedinėti išraiškų. */
 
-SELECT ENAME, ROUND(trunc(months_between(sysdate, HIREDATE)/12 , 0), 0) || ' YEARS ' || Round(months_between(sysdate, HIREDATE) - (ROUND(trunc(months_between(sysdate, HIREDATE)/12 , 0), 0) * 12), 0) || ' MONTHS' as "YEARS OF SERVICE"
+SELECT ENAME, trunc(months_between(sysdate, HIREDATE)/12) || ' YEARS ' || mod(trunc(months_between(sysdate, HIREDATE)), 12) || ' MONTHS' as "YEARS OF SERVICE"
 from EMP;
 
 /* 5.  Darbuotojams, kurie priimti į darbą iki mėnesio 15-os dienos, pirmas darbo užmokestis
@@ -29,9 +30,9 @@ mokamas paskutinį to mėnesio penktadienį. Darbuotojams, kurie priimti į darb
 penktadienį. Pateikite informaciją apie darbuotojus, jų priėmimo į darbą ir pirmo darbo
 užmokesčio gavimo datas. Surūšiuokite pagal priėmimo į darbą datą. */
 
-SELECT ENAME, NEXT_DAY(LAST_DAY(round(HIREDATE, 'Month')) - 7, 'Friday') as PAYDAY
-ORDER by HIREDATE
-from EMP;
+SELECT ENAME, HIREDATE, NEXT_DAY(LAST_DAY(round(HIREDATE, 'Month')) - 7, TO_CHAR(DATE '2000-01-07', 'DAY')) as PAYDAY
+from EMP
+ORDER by HIREDATE;
 
 /* 6. Išveskite į ekraną informaciją žemiau parodytu būdu: */
 
@@ -50,5 +51,4 @@ kaip parodyta žemiau, pakeisdami SALESMAN į SALESPERSON. */
 
 SELECT ENAME, DEPTNO, REPLACE(JOB, 'SALESMAN', 'SALESPERSON') as JOB
 from EMP
-WHERE DEPTNO = 30; 
-
+WHERE DEPTNO = 30;
