@@ -62,3 +62,24 @@ SELECT extract(year from hiredate) metai, count(empno) kiekis
 from emp
 group by extract(year from hiredate)
 having count(empno) = (select max(count(empno)) from emp group by extract(year from hiredate));
+
+// Modifikuokite 4 užduoties komandą taip, kad būtų papildomai išvestas vidutinis atlyginimas kiekviename skyriuje.
+
+SELECT e.DEPTNO, e.ENAME, e.SAL, d.AVG_SAL
+FROM EMP e
+JOIN (SELECT DEPTNO, ROUND(AVG(SAL), 2) AS AVG_SAL
+      FROM EMP
+      GROUP BY DEPTNO) d ON d.DEPTNO = e.DEPTNO
+WHERE e.SAL > d.AVG_SAL
+ORDER BY e.DEPTNO;
+
+//  Pateikite užklausą, kurioje būtų spausdinamas simbolis žvaigždutė (*) priešais darbuotojo
+// pavardę, kuris buvo priimtas į darbą paskutinis. Rezultate informacija turi būti pateikta
+// stulpeliuose ENAME, HIREDATE ir MAXDATE (jame turi būti žvaigždutė).
+
+SELECT e.ENAME, e.HIREDATE,
+       CASE 
+            WHEN e.HIREDATE = (SELECT MAX(HIREDATE) FROM EMP) THEN '*'
+       END AS MAXDATE
+FROM EMP e
+ORDER BY e.HIREDATE;
