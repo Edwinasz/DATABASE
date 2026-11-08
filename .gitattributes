@@ -1,0 +1,2 @@
+# Visi .sql failai rodomi kaip SQL (kitaip GitHub dėl CONNECT BY juos laiko PL/SQL ir nespalvina)
+*.sql linguist-language=SQL
