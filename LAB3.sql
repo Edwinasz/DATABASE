@@ -52,3 +52,56 @@ kaip parodyta žemiau, pakeisdami SALESMAN į SALESPERSON. */
 SELECT ENAME, DEPTNO, REPLACE(JOB, 'SALESMAN', 'SALESPERSON') as JOB
 from EMP
 WHERE DEPTNO = 30;
+
+
+-- =====================================================================
+-- PAPILDOMI PAVYZDŽIAI: eilučių, skaičių ir datų funkcijos
+-- =====================================================================
+-- Eilučių funkcijos                         rezultatas
+--   UPPER / LOWER / INITCAP('JONES')        Jones
+--   CONCAT(a, b)  arba  a || b              SMITHCLERK
+--   SUBSTR('SMITH', 1, 3)                   SMI      (nuo, kiek)
+--   INSTR('SMITH', 'I')                     3        (pozicija)
+--   LENGTH('KING')                          4
+--   LPAD(sal, 8, '*') / RPAD(ename, 15)     ****5000 (lygiavimas, tabuliacija)
+--   TRIM(' A ') / LTRIM / RTRIM             A
+--   REPLACE(job, 'SALESMAN', 'SALESPERSON') SALESPERSON
+-- Skaičių funkcijos
+--   ROUND(45.926, 2) = 45.93     ROUND(sal*1.15) = sveikas skaičius
+--   TRUNC(45.926, 1) = 45.9      MOD(14, 12) = 2
+--   CEIL(4.1) = 5   FLOOR(4.9) = 4   SIGN(sal - 1500) = -1 / 0 / 1   POWER(2, 3) = 8
+
+SELECT INITCAP('JONES'), SUBSTR('SMITH', 1, 3), INSTR('SMITH', 'I'), LENGTH('KING'),
+       LPAD(5000, 8, '*'), ROUND(45.926, 2), TRUNC(45.926, 1), MOD(14, 12)
+FROM dual;
+
+-- dviejų stulpelių lygiavimas
+SELECT RPAD(ename, 15, ' ') || LPAD(job, 15, ' ') AS employee_and_job FROM emp;
+
+-- Datų funkcijos
+--   SYSDATE                         dabartinė data; SYSDATE - hiredate = dienų skaičius
+--   ADD_MONTHS(hiredate, 12)        +1 metai (REVIEW data)
+--   MONTHS_BETWEEN(d1, d2)          mėnesių skirtumas (gali būti trupmena)
+--   NEXT_DAY(d, 'FRIDAY')           pirmas penktadienis PO datos d
+--   LAST_DAY(d)                     mėnesio paskutinė diena
+--   ROUND(d, 'MONTH')               nuo 16 d. pereina į kitą mėnesį; TRUNC(d, 'MONTH') = 1 d.
+--   ROUND/TRUNC(d, 'YEAR')          metų pradžia (ROUND nuo liepos → kitų metų)
+--   EXTRACT(YEAR FROM d)            taip pat MONTH, DAY
+--   d + 7                           data po savaitės
+
+-- atlyginimo peržiūra po metų
+SELECT ename, hiredate, ADD_MONTHS(hiredate, 12) AS review
+FROM emp
+ORDER BY review;
+
+-- išdirbtas laikas "X YEARS Y MONTHS"
+SELECT ename,
+       TRUNC(MONTHS_BETWEEN(SYSDATE, hiredate)/12) || ' YEARS ' ||
+       MOD(TRUNC(MONTHS_BETWEEN(SYSDATE, hiredate)), 12) || ' MONTHS' AS "YEARS OF SERVICE"
+FROM emp;
+
+-- paskutinis mėnesio penktadienis
+-- (TO_CHAR(DATE '2000-01-07', 'DAY') = FRIDAY bet kokiais NLS kalbos nustatymais)
+SELECT ename, hiredate,
+       NEXT_DAY(LAST_DAY(hiredate) - 7, TO_CHAR(DATE '2000-01-07', 'DAY')) AS payday
+FROM emp;
