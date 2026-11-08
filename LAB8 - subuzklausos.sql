@@ -216,3 +216,76 @@ WITH skyr AS (
 )
 SELECT * FROM skyr
 WHERE suma = (SELECT MAX(suma) FROM skyr);
+
+
+-- =====================================================================
+-- PAPILDOMI PAVYZDŽIAI SU SUSPECTS / CRIMES LENTELĖMIS
+-- =====================================================================
+-- SUSPECTS (suspect_id, name, sex, age, height, hair_color, eye_color,
+--           facial_hair, tattoos, glasses, scars, feet_size)
+-- CRIMES   (crime_id, suspect_id, crime_type, committed_date, prison,
+--           start_date, end_date, behavior)
+-- Jungiama per suspect_id. Reikšmės: 'Yes' / 'No', 'Male' / 'Female',
+-- akių spalva 'Blue', 'Green'... (ne didžiosiomis), behavior 'GOOD' / 'BAD' / NULL.
+-- Bausmės trukmė dienomis: end_date - start_date
+
+-- 1. Raskite vyriausią įtariamąjį (-uosius).
+SELECT name, age
+FROM suspects
+WHERE age = (SELECT MAX(age) FROM suspects);
+
+-- 2. Kiekvienam nusikaltimo tipui raskite nusikaltimą su ilgiausia bausme.
+-- a) koreliuota subužklausa
+SELECT c.crime_type, c.crime_id, c.end_date - c.start_date AS dienos
+FROM crimes c
+WHERE c.end_date - c.start_date =
+      (SELECT MAX(end_date - start_date) FROM crimes WHERE crime_type = c.crime_type);
+
+-- b) poromis su kintamuoju (kairėje tiek pat stulpelių, kiek subužklausoje)
+DEFINE laikas = "END_DATE - START_DATE"
+SELECT crime_type, crime_id, &laikas AS laikas
+FROM crimes
+WHERE (crime_type, &laikas) IN
+      (SELECT crime_type, MAX(&laikas)
+       FROM crimes
+       GROUP BY crime_type);
+UNDEFINE laikas
+
+-- 3. Raskite įtariamuosius, kurių amžius didesnis už vidutinį jų lyties amžių.
+SELECT s.name, s.sex, s.age
+FROM suspects s
+WHERE s.age > (SELECT AVG(age) FROM suspects WHERE sex = s.sex);
+
+-- 4. Kuris įtariamasis įvykdė daugiausiai nusikaltimų?
+SELECT s.name, COUNT(*) AS kiekis
+FROM suspects s JOIN crimes c ON s.suspect_id = c.suspect_id
+GROUP BY s.suspect_id, s.name
+HAVING COUNT(*) = (SELECT MAX(COUNT(*)) FROM crimes GROUP BY suspect_id);
+
+-- 5. Trys nusikaltimai su ilgiausiomis bausmėmis.
+SELECT crime_id, crime_type, dienos
+FROM (SELECT crime_id, crime_type, end_date - start_date AS dienos
+      FROM crimes
+      WHERE end_date IS NOT NULL
+      ORDER BY dienos DESC)
+WHERE ROWNUM <= 3;
+
+-- 6. Kiekvienam įtariamajam, turinčiam randų, raskite jo paskutinį nusikaltimą.
+SELECT suspect_id, crime_type, committed_date
+FROM crimes
+WHERE (suspect_id, committed_date) IN
+      (SELECT suspect_id, MAX(committed_date) FROM crimes GROUP BY suspect_id)
+  AND suspect_id IN (SELECT suspect_id FROM suspects WHERE scars = 'Yes');
+
+-- 7. Kuriame kalėjime bausmę atliko daugiausiai skirtingų įtariamųjų?
+SELECT prison, COUNT(DISTINCT suspect_id) AS kiekis
+FROM crimes
+WHERE prison IS NOT NULL
+GROUP BY prison
+HAVING COUNT(DISTINCT suspect_id) =
+       (SELECT MAX(COUNT(DISTINCT suspect_id)) FROM crimes WHERE prison IS NOT NULL GROUP BY prison);
+
+-- 8. Nusikaltimai, kurių bausmė ilgesnė už vidutinę (visų nusikaltimų).
+SELECT crime_id, crime_type, end_date - start_date AS dienos
+FROM crimes
+WHERE end_date - start_date > (SELECT AVG(end_date - start_date) FROM crimes);
