@@ -1,6 +1,4 @@
-# SQL špargalkė kontroliniam (LAB6–9)
-
-Oracle SQL šablonai pagal LAB1–9 laboratorinius darbus (SCOTT ir HR schemos). Kiekvienam užduoties tipui pateikti keli variantai: parink tinkamą ir pakeisk pavardes, skaičius ar datas.
+# SQL (LAB6–9)
 
 **Turinys:** [0. Lentelės](#0-lentelės-ir-ryšiai) · [1. JOIN](#1-join--lentelių-jungimas-lab6) · [2. Aibių operacijos](#2-aibių-operacijos-lab7) · [3. Subužklausos](#3-subužklausos-lab8) · [4. Hierarchinės](#4-hierarchinės-užklausos-lab9) · [5. Funkcijos](#5-funkcijų-žinynas-lab15) · [6. Dažnos klaidos](#6-dažnos-klaidos-ir-spąstai)
 
