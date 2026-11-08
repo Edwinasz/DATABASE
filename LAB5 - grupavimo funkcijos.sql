@@ -139,3 +139,9 @@ GROUP BY prison;
 SELECT NVL(behavior, 'Nenurodytas') AS elgesys, COUNT(*) AS kiekis
 FROM crimes
 GROUP BY NVL(behavior, 'Nenurodytas');
+
+-- 5. Kiekvienais metais įvykdytų nusikaltimų skaičius, surikiuotas pagal metus.
+SELECT EXTRACT(YEAR FROM committed_date) AS metai, COUNT(*) AS kiekis
+FROM crimes
+GROUP BY EXTRACT(YEAR FROM committed_date)
+ORDER BY metai;

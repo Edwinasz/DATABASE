@@ -109,3 +109,8 @@ SELECT suspect_id FROM crimes WHERE behavior = 'BAD';
 -- 4. Įtariamųjų vardai be nusikaltimų (MINUS kaip subužklausa).
 SELECT name FROM suspects
 WHERE suspect_id IN (SELECT suspect_id FROM suspects MINUS SELECT suspect_id FROM crimes);
+
+-- 5. Kalėjimai, kuriuose bausmę atliko ir įtariamieji su tatuiruotėmis, ir be jų.
+SELECT c.prison FROM crimes c JOIN suspects s ON s.suspect_id = c.suspect_id WHERE s.tattoos = 'Yes'
+INTERSECT
+SELECT c.prison FROM crimes c JOIN suspects s ON s.suspect_id = c.suspect_id WHERE s.tattoos = 'No';

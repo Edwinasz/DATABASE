@@ -289,3 +289,9 @@ HAVING COUNT(DISTINCT suspect_id) =
 SELECT crime_id, crime_type, end_date - start_date AS dienos
 FROM crimes
 WHERE end_date - start_date > (SELECT AVG(end_date - start_date) FROM crimes);
+
+-- 9. Įtariamieji, įvykdę daugiau nusikaltimų nei vidutiniškai tenka vienam įtariamajam.
+SELECT s.name, COUNT(*) AS kiekis
+FROM suspects s JOIN crimes c ON s.suspect_id = c.suspect_id
+GROUP BY s.suspect_id, s.name
+HAVING COUNT(*) > (SELECT AVG(COUNT(*)) FROM crimes GROUP BY suspect_id);
