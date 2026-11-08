@@ -1,4 +1,4 @@
--- 1. 20-o skyriaus darbuotoju priemimo i darba datos.
+-- 1. 20-o skyriaus darbuotojų priėmimo į darbą datos.
 SELECT ENAME,
        TO_CHAR(HIREDATE, 'FMMonth, DD "d." YYYY',
                'NLS_DATE_LANGUAGE=English') AS DATE_HIRED
@@ -22,8 +22,8 @@ SELECT ENAME, SAL,
               TO_CHAR(SAL)) AS SALARY_INFO
 FROM EMP;
 
--- 3. Ivestos datos savaites diena be uzpildymo tarpu.
--- Data ivedama DD.MM.YYYY formatu, pvz., 04.10.2026.
+-- 3. Įvestos datos savaitės diena be užpildymo tarpų.
+-- Data įvedama DD.MM.YYYY formatu, pvz., 04.10.2026.
 SELECT TO_CHAR(TO_DATE('&anydate', 'DD.MM.YYYY'),
                'fmDAY', 'NLS_DATE_LANGUAGE=English') AS DAY
 FROM DUAL;
