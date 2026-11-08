@@ -77,3 +77,35 @@ WHERE e.hiredate < m.hiredate;
 --   WHERE EXTRACT(YEAR FROM hiredate) = 1981
 --   WHERE TO_CHAR(hiredate, 'YYYY') = '1981' AND TO_CHAR(hiredate, 'MM') <= '06'   -- I pusė (II: > '06')
 --   WHERE TO_CHAR(hiredate, 'Q') = '1'                                            -- ketvirtis
+
+
+-- =====================================================================
+-- PAPILDOMI PAVYZDŽIAI SU SUSPECTS / CRIMES LENTELĖMIS
+-- =====================================================================
+-- SUSPECTS (suspect_id, name, sex, age, height, hair_color, eye_color,
+--           facial_hair, tattoos, glasses, scars, feet_size)
+-- CRIMES   (crime_id, suspect_id, crime_type, committed_date, prison,
+--           start_date, end_date, behavior)
+-- Jungiama per suspect_id. Reikšmės: 'Yes' / 'No', 'Male' / 'Female',
+-- akių spalva 'Blue', 'Green'... (ne didžiosiomis), behavior 'GOOD' / 'BAD' / NULL.
+-- Bausmės trukmė dienomis: end_date - start_date
+
+-- 1. Raskite įtariamųjų numerius, kurie neturi nė vieno nusikaltimo.
+SELECT suspect_id FROM suspects
+MINUS
+SELECT suspect_id FROM crimes;
+
+-- 2. Raskite nusikaltimų tipus, kuriuos įvykdė ir vyrai, ir moterys.
+SELECT c.crime_type FROM crimes c JOIN suspects s ON s.suspect_id = c.suspect_id WHERE s.sex = 'Male'
+INTERSECT
+SELECT c.crime_type FROM crimes c JOIN suspects s ON s.suspect_id = c.suspect_id WHERE s.sex = 'Female';
+
+-- 3. Raskite įtariamuosius, kurie turėjo bent vieną nusikaltimą su GOOD elgesiu,
+-- bet nė vieno su BAD.
+SELECT suspect_id FROM crimes WHERE behavior = 'GOOD'
+MINUS
+SELECT suspect_id FROM crimes WHERE behavior = 'BAD';
+
+-- 4. Įtariamųjų vardai be nusikaltimų (MINUS kaip subužklausa).
+SELECT name FROM suspects
+WHERE suspect_id IN (SELECT suspect_id FROM suspects MINUS SELECT suspect_id FROM crimes);
