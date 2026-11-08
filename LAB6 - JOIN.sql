@@ -144,3 +144,38 @@ SELECT d.dname, COUNT(e.empno) AS kiekis, ROUND(AVG(e.sal), 2) AS vid_sal
 FROM dept d LEFT JOIN emp e ON e.deptno = d.deptno
 GROUP BY d.dname
 ORDER BY d.dname;
+
+
+-- =====================================================================
+-- PAPILDOMI PAVYZDŽIAI SU SUSPECTS / CRIMES LENTELĖMIS
+-- =====================================================================
+-- SUSPECTS (suspect_id, name, sex, age, height, hair_color, eye_color,
+--           facial_hair, tattoos, glasses, scars, feet_size)
+-- CRIMES   (crime_id, suspect_id, crime_type, committed_date, prison,
+--           start_date, end_date, behavior)
+-- Jungiama per suspect_id. Reikšmės: 'Yes' / 'No', 'Male' / 'Female',
+-- akių spalva 'Blue', 'Green'... (ne didžiosiomis), behavior 'GOOD' / 'BAD' / NULL.
+-- Bausmės trukmė dienomis: end_date - start_date
+
+-- 1. Išveskite įtariamųjų su tatuiruotėmis vardus, nusikaltimų tipus ir įvykdymo datas
+-- nusikaltimams, įvykdytiems 2023 metais.
+SELECT s.name, c.crime_type, c.committed_date
+FROM suspects s JOIN crimes c ON s.suspect_id = c.suspect_id
+WHERE s.tattoos = 'Yes'
+  AND EXTRACT(YEAR FROM c.committed_date) = 2023;
+
+-- 2. Kiekvienam įtariamajam išveskite vardą ir nusikaltimų skaičių.
+-- Įtariamieji be nusikaltimų turi būti sąraše su 0 (todėl LEFT JOIN ir COUNT(c.crime_id)).
+SELECT s.name, COUNT(c.crime_id) AS kiekis
+FROM suspects s LEFT JOIN crimes c ON s.suspect_id = c.suspect_id
+GROUP BY s.suspect_id, s.name;
+
+-- 3. Išveskite skirtingus įtariamuosius (vardas, amžius), kurie atliko bausmę 'Hill Prison'.
+-- USING / NATURAL JOIN tinka, nes vienintelis bendras stulpelis yra suspect_id.
+SELECT DISTINCT name, age
+FROM suspects JOIN crimes USING (suspect_id)
+WHERE prison = 'Hill Prison';
+
+SELECT DISTINCT name, age
+FROM suspects NATURAL JOIN crimes
+WHERE prison = 'Hill Prison';
