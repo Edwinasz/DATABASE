@@ -102,3 +102,40 @@ SELECT job, COUNT(*)
 FROM emp
 GROUP BY job
 HAVING COUNT(*) = (SELECT MAX(COUNT(*)) FROM emp GROUP BY job);
+
+
+-- =====================================================================
+-- PAPILDOMI PAVYZDŽIAI SU SUSPECTS / CRIMES LENTELĖMIS
+-- =====================================================================
+-- SUSPECTS (suspect_id, name, sex, age, height, hair_color, eye_color,
+--           facial_hair, tattoos, glasses, scars, feet_size)
+-- CRIMES   (crime_id, suspect_id, crime_type, committed_date, prison,
+--           start_date, end_date, behavior)
+-- Jungiama per suspect_id. Reikšmės: 'Yes' / 'No', 'Male' / 'Female',
+-- akių spalva 'Blue', 'Green'... (ne didžiosiomis), behavior 'GOOD' / 'BAD' / NULL.
+-- Bausmės trukmė dienomis: end_date - start_date
+
+-- 1. Kiek kartų buvo įvykdytas kiekvienas nusikaltimo tipas? Rodykite tik tipus,
+-- kurie kartojasi bent 9 kartus.
+SELECT crime_type, COUNT(*) AS kiekis
+FROM crimes
+GROUP BY crime_type
+HAVING COUNT(*) >= 9;
+
+-- 2. Kiekvienai lyčiai išveskite įtariamųjų skaičių, jauniausio ir vyriausio amžių
+-- bei vidutinį amžių, suapvalintą iki 1 skaitmens.
+SELECT sex, COUNT(*), MIN(age), MAX(age), ROUND(AVG(age), 1)
+FROM suspects
+GROUP BY sex;
+
+-- 3. Kiekvienam kalėjimui išveskite vidutinę bausmės trukmę dienomis (sveikas skaičius).
+-- Nusikaltimų be bausmės neįtraukite.
+SELECT prison, ROUND(AVG(end_date - start_date)) AS vid_dienos
+FROM crimes
+WHERE prison IS NOT NULL
+GROUP BY prison;
+
+-- 4. Kiek nusikaltimų turi kiekvieno elgesio įvertinimą (NULL rodykite kaip 'Nenurodytas')?
+SELECT NVL(behavior, 'Nenurodytas') AS elgesys, COUNT(*) AS kiekis
+FROM crimes
+GROUP BY NVL(behavior, 'Nenurodytas');
