@@ -179,3 +179,10 @@ WHERE prison = 'Hill Prison';
 SELECT DISTINCT name, age
 FROM suspects NATURAL JOIN crimes
 WHERE prison = 'Hill Prison';
+
+-- 4. Kiekvienam kalėjimui išveskite skirtingų įtariamųjų skaičių ir jų vidutinį amžių
+-- (suapvalintą iki sveiko skaičiaus).
+SELECT c.prison, COUNT(DISTINCT s.suspect_id) AS kiekis, ROUND(AVG(s.age)) AS vid_amzius
+FROM crimes c JOIN suspects s ON s.suspect_id = c.suspect_id
+WHERE c.prison IS NOT NULL
+GROUP BY c.prison;
