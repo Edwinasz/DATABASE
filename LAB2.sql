@@ -54,3 +54,34 @@
  UNDEFINE pradz
  UNDEFINE paba
  UNDEFINE metinis
+
+
+-- =====================================================================
+-- ŠPARGALKĖ: SQL*Plus kintamieji (LAB2)
+-- =====================================================================
+-- &kint   klausia reikšmės kiekvieną kartą
+-- &&kint  paklausia vieną kartą ir įsimena sesijai
+-- tekstui ir datoms kintamąjį dėk į kabutes: '&job'
+
+SELECT * FROM emp WHERE job = UPPER('&job');
+
+SELECT ename, hiredate FROM emp
+WHERE hiredate BETWEEN TO_DATE('&&nuo', 'DD-MM-YYYY') AND TO_DATE('&&iki', 'DD-MM-YYYY');
+UNDEFINE nuo
+UNDEFINE iki
+
+-- DEFINE: kintamasis su išraiška
+DEFINE metinis = "sal * 12"
+SELECT ename, &metinis AS yearly_salary FROM emp WHERE &metinis >= 30000;
+UNDEFINE metinis
+
+-- ACCEPT: savas klausimo tekstas ir numatytoji reikšmė
+ACCEPT dept NUMBER FORMAT 99 DEFAULT 10 PROMPT 'Skyrius: '
+SELECT ename, sal FROM emp WHERE deptno = &dept;
+
+-- išvedimo formatas: stulpelio plotis
+-- (SQL*Plus komandų eilutėse komentarų gale nerašyk)
+COLUMN name FORMAT A25
+
+-- parodo visus apibrėžtus kintamuosius
+DEFINE
