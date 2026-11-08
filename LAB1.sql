@@ -76,3 +76,38 @@ from EMP;
 SELECT ENAME, DEPTNO, HIREDATE
 from EMP
 WHERE EXTRACT(YEAR FROM HIREDATE) = 1983;
+
+
+-- =====================================================================
+-- PAPILDOMI PAVYZDŽIAI: SELECT pagrindai
+-- =====================================================================
+-- Tvarka: SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY
+-- Duomenys EMP lentelėje saugomi didžiosiomis raidėmis: 'JONES', 'SALESMAN'
+--   ('jones' ar 'Jones' nieko neras; jei nesi tikras: UPPER(ename) = 'JONES')
+
+-- intervalas (abu galai įskaičiuoti)
+SELECT ename, deptno, sal
+FROM emp
+WHERE sal BETWEEN 1600 AND 3000;
+
+-- LIKE: % = bet kiek simbolių, _ = lygiai vienas simbolis
+SELECT ename FROM emp WHERE ename LIKE '%TH%' OR ename LIKE '%LL%';
+SELECT ename FROM emp WHERE ename LIKE '_A%';      -- antra raidė A
+
+-- sąrašas ir NULL tikrinimas (= NULL NEVEIKIA, visada IS NULL)
+SELECT ename, job FROM emp WHERE job IN ('CLERK', 'ANALYST');
+SELECT ename FROM emp WHERE comm IS NULL;
+SELECT ename FROM emp WHERE mgr IS NOT NULL;
+
+-- sujungimas || ir aliasas
+SELECT ename || '(' || LOWER(job) || ')' AS employee FROM emp;   -- SMITH(clerk)
+
+-- unikalios reikšmės ir rikiavimas (DESC mažėjimo tvarka)
+SELECT DISTINCT job FROM emp ORDER BY job DESC;
+
+-- metinis atlyginimas su komisiniais: be NVL ne pardavėjams gautum NULL
+SELECT ename, sal*12 + NVL(comm, 0) AS metinis FROM emp;
+
+-- Stulpelio aliaso negalima naudoti WHERE dalyje (ORA-00904), tik ORDER BY:
+--   WHERE metinis > 30000         -- KLAIDA
+--   WHERE sal*12 > 30000          -- teisingai
