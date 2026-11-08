@@ -606,7 +606,7 @@ SELECT DISTINCT job FROM emp ORDER BY job DESC;   -- unikalios reikšmės
 | Su USING rašomas aliasas (`e.deptno`) | su USING aliasų neliek: `deptno` |
 | Komentarai `//` | `--` arba `/* */` veikia bet kuriame Oracle kliente |
 
-**Greitas planas kontroliniam:**
+**Greitas planas užduočiai spręsti:**
 
 1. Kurios lentelės reikalingos (žr. [0 skyrių](#0-lentelės-ir-ryšiai)).
 2. Ar reikia jungti (1), atimti / kirsti (2), lyginti su apskaičiuota reikšme (3), ar eiti per viršininkus (4).
