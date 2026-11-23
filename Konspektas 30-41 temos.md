@@ -1,6 +1,6 @@
-# SQL konspektas: 30–38 temos
+# SQL konspektas: 30–41 temos
 
-**Turinys:** [30. INSERT sakiniai](#30-tema-insert-sakiniai) · [31. UPDATE ir DELETE](#31-tema-update-ir-delete) · [32. DEFAULT, MERGE ir kelių lentelių INSERT](#32-tema-default-merge-ir-kelių-lentelių-insert) · [33. Lentelės kūrimas](#33-tema-lentelės-kūrimas) · [34. Duomenų tipai](#34-tema-duomenų-tipai) · [35. Lentelių modifikavimas](#35-tema-lentelių-modifikavimas) · [36. Apribojimai: įvadas, NOT NULL ir UNIQUE](#36-tema-apribojimai-įvadas-not-null-ir-unique) · [37. PRIMARY KEY, FOREIGN KEY ir CHECK](#37-tema-primary-key-foreign-key-ir-check) · [38. Apribojimų valdymas](#38-tema-apribojimų-valdymas)
+**Turinys:** [30. INSERT sakiniai](#30-tema-insert-sakiniai) · [31. UPDATE ir DELETE](#31-tema-update-ir-delete) · [32. DEFAULT, MERGE ir kelių lentelių INSERT](#32-tema-default-merge-ir-kelių-lentelių-insert) · [33. Lentelės kūrimas](#33-tema-lentelės-kūrimas) · [34. Duomenų tipai](#34-tema-duomenų-tipai) · [35. Lentelių modifikavimas](#35-tema-lentelių-modifikavimas) · [36. Apribojimai: įvadas, NOT NULL ir UNIQUE](#36-tema-apribojimai-įvadas-not-null-ir-unique) · [37. PRIMARY KEY, FOREIGN KEY ir CHECK](#37-tema-primary-key-foreign-key-ir-check) · [38. Apribojimų valdymas](#38-tema-apribojimų-valdymas) · [39. Rodiniai](#39-tema-rodiniai) · [40. DML operacijos ir rodiniai](#40-tema-dml-operacijos-ir-rodiniai) · [41. Rodinių valdymas](#41-tema-rodinių-valdymas)
 
 ---
 
@@ -1481,3 +1481,377 @@ WHERE table_name ='COPY_EMPLOYEES';
 Tipų raidės: **P** – PRIMARY KEY, **R** – REFERENCES (išorinis raktas), **C** – CHECK (įskaitant NOT NULL), **U** – UNIQUE.
 
 **Sąvokos:** ALTER TABLE, CASCADE, CASCADE CONSTRAINTS, DISABLE CONSTRAINT, DROP COLUMN, DROP CONSTRAINT, ENABLE CONSTRAINT.
+
+## 39 tema. Rodiniai
+
+Rodinys (VIEW) – duomenų žodyne saugomas SELECT sakinys, per kurį matomi ar keičiami bazinių lentelių duomenys; savo duomenų neturi.
+
+### Kas yra rodinys
+
+- DB objektas kaip lentelė, bet ne „tikra“ lentelė – loginis esamų lentelių ar kito rodinio atvaizdas.
+- Nuosavų duomenų neturi; veikia kaip **langas**, per kurį peržiūrimi ar keičiami lentelių duomenys.
+- Lentelės, kuriomis jis grindžiamas, – **bazinės lentelės**.
+
+```sql
+CREATE VIEW view_employees
+AS SELECT employee_id,first_name, last_name, email
+   FROM employees
+   WHERE employee_id BETWEEN 100 and 124;
+
+SELECT *
+FROM view_employees;
+```
+
+| EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | EMAIL |
+| --- | --- | --- | --- |
+| 100 | Steven | King | SKING |
+| 101 | Neena | Kochhar | NKOCHHAR |
+| 102 | Lex | De Haan | LDEHAAN |
+| 124 | Kevin | Mourgos | KMOURGOS |
+| 103 | Alexander | Hunold | AHUNOLD |
+| 104 | Bruce | Ernst | BERNST |
+| 107 | Diana | Lorentz | DLORENTZ |
+
+### Kodėl naudoti rodinius
+
+- Apriboja prieigą – rodomi tik tam tikri lentelės stulpeliai.
+- Sumažina užklausų sudėtingumą: kūrėjas parašo sujungimus, o vartotojas nemato kodo ir naudoja paprastas užklausas.
+- Duomenys iš kelių lentelių – vartotojams suteikiama duomenų nepriklausomybė.
+- Tuos pačius duomenis galima matyti skirtingais būdais; vartotojų grupėms – prieiga pagal jų leidimus ar kriterijus.
+
+### CREATE VIEW sintaksė
+
+```sql
+CREATE [OR REPLACE] [FORCE| NOFORCE] VIEW view  [(alias [,
+   alias]...)] AS subquery
+[WITH CHECK OPTION [CONSTRAINT constraint]]
+[WITH READ ONLY [CONSTRAINT constraint]];
+```
+
+| Dalis | Reikšmė |
+| --- | --- |
+| OR REPLACE | Iš naujo sukuria rodinį, jei jis jau yra |
+| FORCE | Sukuria rodinį, nesvarbu, ar bazinės lentelės yra |
+| NOFORCE | Sukuria tik jei bazinė lentelė yra (numatytoji) |
+| view | Rodinio pavadinimas |
+| alias | Pavadinimas kiekvienai rodinio užklausos išraiškai |
+| subquery | Pilnas SELECT sakinys (gali būti sudėtinis, su pseudonimais) |
+| WITH CHECK OPTION | Eilutės turi likti pasiekiamos rodiniui po INSERT / UPDATE |
+| CONSTRAINT | CHECK OPTION apribojimo pavadinimas |
+| WITH READ ONLY | Rodinyje negalima jokia DML operacija |
+
+Pavyzdys:
+
+```sql
+CREATE OR REPLACE VIEW view_euro_countries
+AS SELECT country_id, region_id, country_name, capitol
+   FROM wf_countries
+   WHERE location LIKE '%Europe';
+
+SELECT * FROM view_euro_countries
+ORDER BY country_name;
+```
+
+| COUNTRY\_ID | REGION\_ID | COUNTRY\_NAME | CAPITOL |
+| --- | --- | --- | --- |
+| 22 | 155 | Bailiwick of Guernsey | Saint Peter Port |
+| 203 | 155 | Bailiwick of Jersey | Saint Helier |
+| 387 | 39 | Bosnia and Herzegovina | Sarajevo |
+| 420 | 151 | Czech Republic | Prague |
+| 298 | 154 | Faroe Islands | Torshavn |
+| 49 | 155 | Federal Republic of Germany | Berlin |
+| 33 | 155 | French Republic | Paris |
+
+### Kūrimo gairės
+
+- Subužklausoje gali būti sudėtinė SELECT sintaksė.
+- Dėl našumo subužklausoje **neturi būti ORDER BY** – ORDER BY naudojamas renkant duomenis iš rodinio (kaip aukščiau).
+- `OR REPLACE` pakeičia apibrėžimą jo netrinant ir iš naujo nesuteikiant privilegijų.
+- Stulpeliams subužklausoje galima naudoti pseudonimus.
+
+### Paprastas ir sudėtinis rodinys
+
+| Ypatybė | Paprastas | Sudėtinis |
+| --- | --- | --- |
+| Lentelių skaičius | Viena | Viena ar daugiau |
+| Gali turėti funkcijų | Ne | Taip |
+| Gali turėti duomenų grupių | Ne | Taip |
+| DML (INSERT, UPDATE, DELETE) rodinyje | Taip | Ne visada |
+
+### Paprastas rodinys
+
+Duomenys iš vienos lentelės, be sujungimų ir grupinių funkcijų – galimi INSERT, UPDATE, DELETE ir MERGE, veikiantys bazinę lentelę:
+
+```sql
+CREATE OR REPLACE VIEW view_euro_countries
+AS SELECT country_id, country_name, capitol
+   FROM wf_countries
+   WHERE location LIKE '%Europe';
+```
+
+Pseudonimai SELECT sakinyje:
+
+```sql
+CREATE OR REPLACE VIEW view_euro_countries
+AS SELECT country_id AS "ID", country_name AS "Country",
+      capitol AS "Capitol City"
+   FROM wf_countries
+   WHERE location LIKE '%Europe';
+```
+
+Pseudonimai po CREATE VIEW, prieš SELECT subužklausą:
+
+```sql
+CREATE OR REPLACE VIEW view_euro_countries("ID", "Country",
+    "Capitol City")
+ AS SELECT country_id, country_name, capitol
+    FROM wf_countries
+    WHERE location LIKE '%Europe';
+```
+
+**FORCE** sukuria rodinį net jei bazinės lentelės nėra – DBA naudinga kuriant DB, kai laukiama privilegijų tam objektui. **NOFORCE** – numatytoji.
+
+### Sudėtinis rodinys
+
+Naudoja sujungimus ir grupines funkcijas. Duomenys iš dviejų lentelių:
+
+```sql
+CREATE OR REPLACE VIEW view_euro_countries
+    ("ID", "Country", "Capitol City", "Region")
+AS SELECT c.country_id, c.country_name, c.capitol,
+r.region_name
+   FROM wf_countries c JOIN wf_world_regions r
+   USING (region_id)
+   WHERE location LIKE '%Europe';
+
+SELECT *
+FROM view_euro_countries;
+```
+
+| ID | Country | Capitol City | Region |
+| --- | --- | --- | --- |
+| 375 | Republic of Belarus | Minsk | Eastern Europe |
+| 48 | Republic of Poland | Warsaw | Eastern Europe |
+| 421 | Slovak Republic | Bratislava | Eastern Europe |
+| 36 | Republic of Hungary | Budapest | Eastern Europe |
+| 90 | Republic of Turkey | Ankara | Eastern Europe |
+| 40 | Romania | Bucharest | Eastern Europe |
+| 373 | Republic of Moldova | Chisinau | Eastern Europe |
+| 370 | Republic of Lithuania | Vilnius | Eastern Europe |
+| 371 | Republic of Latvia | Riga | Eastern Europe |
+| 372 | Republic of Estonia | Tallinn | Eastern Europe |
+
+Su grupine funkcija:
+
+```sql
+CREATE OR REPLACE VIEW view_high_pop
+   ("Region ID", "Highest
+population")
+AS SELECT region_id, MAX(population)
+   FROM wf_countries
+   GROUP BY region_id;
+
+SELECT * FROM view_high_pop;
+```
+
+| Region ID | Highest population |
+| --- | --- |
+| 5 | 188078227 |
+| 9 | 20264082 |
+| 11 | 131859731 |
+| 13 | 107449525 |
+| 14 | 74777981 |
+| 15 | 78887007 |
+| 17 | 62660551 |
+| 18 | 44187637 |
+| 21 | 298444215 |
+
+### Rodinio keitimas
+
+Norėdami pakeisti rodinį jo nepanaikinus, kuriame jį iš naujo su `OR REPLACE` – senas rodinys pakeičiamas nauja versija:
+
+```sql
+CREATE OR REPLACE VIEW view_euro_countries
+AS SELECT country_id, region_id, country_name, capitol
+   FROM wf_countries
+   WHERE location LIKE '%Europe';
+```
+
+**Sąvokos:** pseudonimas, sudėtinis rodinys, CREATE VIEW, FORCE, NOFORCE, REPLACE, paprastas rodinys.
+
+## 40 tema. DML operacijos ir rodiniai
+
+Per paprastą rodinį galima INSERT, UPDATE ir DELETE – keičiama bazinė lentelė; WITH CHECK OPTION neleidžia eilutės „atšokti“ už rodinio ribų, WITH READ ONLY draudžia bet kokį DML.
+
+### DML per rodinį
+
+- DML su paprastais rodiniais keičia duomenis bazinėse lentelėse.
+- Net jei rodinys WHERE sąlyga riboja matomą informaciją, vartotojai vis tiek gali atlikti DML visuose rodinio stulpeliuose – net taip, kad eilutė nebebūtų rodinio dalis. Tai gali būti ne tai, ko siekė DBA.
+
+Rodinys 50 skyriaus vadovams – kad matytų tik savo darbuotojus:
+
+```sql
+CREATE VIEW view_dept50
+AS SELECT department_id, employee_id,first_name, last_name,
+salary
+ FROM copy_employees
+ WHERE department_id = 50;
+
+SELECT * FROM view_dept50;
+```
+
+| DEPARTMENT\_ID | EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | SALARY |
+| --- | --- | --- | --- | --- |
+| 50 | 124 | Kevin | Mourgos | 5800 |
+| 50 | 141 | Trenna | Rajs | 3500 |
+| 50 | 142 | Curtis | Davies | 3100 |
+| 50 | 143 | Randall | Matos | 2600 |
+| 50 | 144 | Peter | Vargas | 2500 |
+
+Prieigą valdo dvi CREATE VIEW parinktys: **WITH CHECK OPTION** ir **WITH READ ONLY**.
+
+### Be WITH CHECK OPTION
+
+```sql
+CREATE VIEW view_dept50
+AS SELECT department_id, employee_id, first_name, last_name,
+salary
+   FROM copy_employees
+   WHERE department_id = 50;
+
+UPDATE view_dept50
+SET department_id = 90
+WHERE employee_id = 124;
+```
+
+→ `1 row(s) updated.` – darbuotojo 124 skyrius pakeistas į 90, nors jis nebe rodinio dalis.
+
+### WITH CHECK OPTION
+
+- DML per rodinį turi likti **rodinio domene** – bet koks bandymas pakeisti eilutės skyriaus numerį nepavyks.
+- Apribojimas pavadintas `view_dept50_check`.
+
+```sql
+CREATE OR REPLACE VIEW view_dept50
+AS SELECT department_id, employee_id, first_name, last_name,
+salary
+   FROM employees
+   WHERE department_id = 50
+WITH CHECK OPTION CONSTRAINT view_dept50_check;
+
+UPDATE view_dept50
+SET department_id = 90
+WHERE employee_id = 124;
+```
+
+→ `ORA-01402: view WITH CHECK OPTION where-clause violation`
+
+### WITH READ ONLY
+
+Rodinyje negalima jokia DML operacija – bet koks INSERT, UPDATE ar DELETE sukels Oracle serverio klaidą.
+
+```sql
+CREATE OR REPLACE VIEW view_dept50
+AS SELECT department_id, employee_id, first_name, last_name,
+salary
+ FROM employees
+ WHERE department_id = 50
+WITH READ ONLY;
+```
+
+### DML apribojimai rodiniuose
+
+Paprastiems rodiniams DML galima, sudėtiniams – ne visada. Trys taisyklės:
+
+| Jei rodinyje yra… | DELETE (šalinti) | UPDATE (keisti) | INSERT (pridėti) |
+| --- | --- | --- | --- |
+| Grupinės funkcijos | Negalima | Negalima | Negalima |
+| GROUP BY | Negalima | Negalima | Negalima |
+| DISTINCT | Negalima | Negalima | Negalima |
+| Pseudostulpelis ROWNUM | Negalima | Negalima | Negalima |
+| Stulpeliai, apibrėžti išraiškomis | Galima | Negalima | Negalima |
+| Ne visi bazinės lentelės NOT NULL stulpeliai | Galima | Galima | Negalima |
+
+**Sąvokos:** WITH CHECK OPTION, WITH READ ONLY.
+
+## 41 tema. Rodinių valdymas
+
+DROP VIEW pašalina tik rodinio apibrėžimą, įdėtas rodinys – tai subužklausa FROM dalyje, o TOP-N analizė = įdėtas rodinys su ORDER BY + ROWNUM <= n išorėje.
+
+### Rodinio šalinimas
+
+- Rodinys neturi savo duomenų, todėl jo šalinimas bazinių lentelių duomenų nepaveikia.
+- Jei per rodinį buvo įterpiami, atnaujinami ar trinami duomenys – tie pakeitimai lentelėse išlieka.
+- Iš DB pašalinamas tik apibrėžimas (SELECT sakinys duomenų žodyne).
+- Šalinti gali tik kūrėjas arba vartotojas su teise DROP ANY VIEW.
+
+```sql
+DROP VIEW viewname;
+```
+
+### Įdėti rodiniai (inline view)
+
+- Tai **subužklausos FROM dalyje** – subužklausa rašoma lyg būtų lentelės pavadinimas.
+- Naudojami sudėtingoms užklausoms supaprastinti: pašalinami sujungimai, kelios užklausos sutraukiamos į vieną.
+- Subužklausos rezultatui suteikiamas pseudonimas (`d`), kuriuo pagrindinė užklausa ima stulpelius iš abiejų šaltinių.
+
+```sql
+SELECT e.last_name, e.salary, e.department_id, d.maxsal
+FROM employees e,
+       (SELECT department_id, max(salary) maxsal
+        FROM employees
+        GROUP BY department_id) d
+WHERE e.department_id = d.department_id
+AND e.salary = d.maxsal;
+```
+
+### TOP-N analizė
+
+- SQL operacija rezultatams reitinguoti – gauti 5 (ar n) geriausius įrašus.
+- Įdėtas rodinys pateikia surikiuotą rinkinį, `ROWNUM` priskiria eilučių numerius, išorinė užklausa paima pirmuosius penkis.
+- Išorinės užklausos WHERE turi naudoti `<` arba `<=`.
+
+Be įdėto rodinio (ilgiausiai dirbantys):
+
+```sql
+SELECT ROWNUM AS "Longest employed", last_name, hire_date
+FROM employees
+WHERE ROWNUM <=5
+ORDER BY hire_date;
+```
+
+| Longest employed | LAST\_NAME | HIRE\_DATE |
+| --- | --- | --- |
+| 1 | King | 17-Jun-1987 |
+| 4 | Whalen | 17-Sep-1987 |
+| 2 | Kochhar | 21-Sep-1989 |
+| 3 | De Haan | 13-Jan-1993 |
+| 5 | Higgins | 07-Jun-1994 |
+
+Numeriai sumaišyti – ROWNUM priskirtas prieš ORDER BY, todėl tai ne tikras TOP 5.
+
+Su įdėtu rodiniu:
+
+```sql
+SELECT ROWNUM AS "Longest employed", last_name, hire_date
+FROM (SELECT last_name, hire_date
+      FROM employees
+      ORDER BY hire_date)
+WHERE ROWNUM <=5;
+```
+
+| Longest employed | LAST\_NAME | HIRE\_DATE |
+| --- | --- | --- |
+| 1 | King | 17-Jun-1987 |
+| 2 | Whalen | 17-Sep-1987 |
+| 3 | Kochhar | 21-Sep-1989 |
+| 4 | Hunold | 03-Jan-1990 |
+| 5 | Ernst | 21-May-1991 |
+
+Kaip veikia:
+
+1. `(SELECT last_name, hire_date FROM employees...` – įdėtas rodinys parenka pavardes ir įdarbinimo datas.
+2. `...ORDER BY hire_date)` – surikiuoja nuo seniausių iki naujausių.
+3. `WHERE ROWNUM <=5` – išorinė užklausa apriboja iki 5 eilučių.
+
+**Sąvokos:** DROP VIEW, įdėtas rodinys (inline view), TOP-N ANALYSIS, ROWNUM.
